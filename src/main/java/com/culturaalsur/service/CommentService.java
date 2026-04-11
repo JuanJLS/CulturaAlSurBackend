@@ -15,12 +15,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CommentService {
+
+    private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
@@ -63,7 +66,8 @@ public class CommentService {
         return CommentDto.builder()
                 .id(comment.getId())
                 .content(comment.getContent())
-                .createdAt(comment.getCreatedAt())
+                .createdAt(comment.getCreatedAt() != null
+                        ? comment.getCreatedAt().format(ISO) : null)
                 .authorUsername(comment.getAuthor() != null
                         ? comment.getAuthor().getUsername() : "Anonymous")
                 .build();
