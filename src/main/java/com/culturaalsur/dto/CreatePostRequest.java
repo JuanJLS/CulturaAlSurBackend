@@ -1,27 +1,26 @@
 package com.culturaalsur.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-// PostDetailDto.java
-// Used in the single-post endpoint — every field the detail page needs.
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostDetailDto {
-    private Long id;
+public class CreatePostRequest {
+    @NotBlank
     private String title;
+
     private String body;
+
+    // Optional — defaults to "general" in the service if left blank.
     private String category;
+
+    // Optional — a post does not need to be tagged at creation time.
     private String tag;
-    private LocalDateTime createdAt;
-    private String authorUsername;
+
     private List<PostMediaDto> media;
-    private List<CommentDto> comments;
 }
