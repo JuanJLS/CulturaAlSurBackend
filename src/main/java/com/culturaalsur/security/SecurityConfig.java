@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,7 +26,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomUserDetailsService userDetailsService;
     private final JwtAuthFilter jwtAuthFilter;
 
     @Value("${cors.allowed-origin}")
@@ -44,11 +42,6 @@ public class SecurityConfig {
 
                 // ── Stateless sessions — JWT carries all auth state ───────────────
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // ── Wire our DaoAuthenticationProvider explicitly so Spring Security
-                //    doesn't also try to auto-configure one from the UserDetailsService
-                //    bean, which produces a duplicate-provider warning.
-                .authenticationProvider(daoAuthenticationProvider())
 
                 // ── Endpoint access rules ─────────────────────────────────────────
                 .authorizeHttpRequests(auth -> auth
@@ -84,14 +77,6 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
-    }
-
-    // Not a @Bean — wired directly into the filter chain above to avoid the
-    // "UserDetailsService beans will not be used" Spring Security warning.
-    private DaoAuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
-        return provider;
     }
 
     @Bean
