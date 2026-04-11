@@ -45,6 +45,11 @@ public class SecurityConfig {
                 // ── Stateless sessions — JWT carries all auth state ───────────────
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
+                // ── Wire our DaoAuthenticationProvider explicitly so Spring Security
+                //    doesn't also try to auto-configure one from the UserDetailsService
+                //    bean, which produces a duplicate-provider warning.
+                .authenticationProvider(daoAuthenticationProvider())
+
                 // ── Endpoint access rules ─────────────────────────────────────────
                 .authorizeHttpRequests(auth -> auth
                         // Public read access to posts
@@ -81,8 +86,9 @@ public class SecurityConfig {
         return source;
     }
 
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
+    // Not a @Bean — wired directly into the filter chain above to avoid the
+    // "UserDetailsService beans will not be used" Spring Security warning.
+    private DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;

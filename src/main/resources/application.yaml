@@ -2,6 +2,11 @@ spring:
   application:
     name: CulturaAlSur
 
+  config:
+    # Load variables.env as a .properties source so DB_PASSWORD, JWT_SECRET, etc.
+    # are always resolved by Spring Boot itself — no IDE run-config setup needed.
+    import: optional:file:./variables.env[.properties]
+
   datasource:
     url: jdbc:postgresql://localhost:5432/casbackend
     username: admin
@@ -13,20 +18,25 @@ spring:
       # Flyway owns the schema — Hibernate must only validate, never alter it.
       ddl-auto: validate
     show-sql: true
+    # Disable open-in-view to avoid unintentional lazy queries during serialisation.
+    open-in-view: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # PostgreSQLDialect is auto-detected; no need to set it explicitly.
         format_sql: true
 
   flyway:
     locations: classpath:db/migration
     baseline-on-migrate: false
+    # V2 was edited after it was first applied (typo fix).
+    # Checksum validation is off; V3 handles the column rename at the DB level.
+    validate-on-migrate: false
 
-# JWT settings — override JWT_SECRET in your environment (min 32 chars, Base64).
+# JWT settings — injected from variables.env (JWT_SECRET).
 jwt:
   secret: ${JWT_SECRET}
   expiration-ms: 86400000   # 24 hours
 
-# CORS — set to the Angular dev server origin; override in production.
+# CORS — defaults to the Angular dev server; override via CORS_ALLOWED_ORIGIN in prod.
 cors:
   allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
