@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -23,30 +25,42 @@ public class PostService {
     private final PostRepository postRepository;
     private final AppUserRepository userRepository;
 
-    public List<PostSummaryDto> getAllPosts() {
-        return postRepository.findAllByOrderByCreatedAtDesc()
-                .stream()
-                .map(this::toSummary)
-                .toList();
+    /**
+     * Returns all posts, optionally filtered by category or tag.
+     * Only one filter is applied at a time; category takes precedence over tag.
+     */
+    @Transactional(readOnly = true)
+    public List<PostSummaryDto> getAllPosts(String category, String tag) {
+        List<Post> posts;
+        if (StringUtils.hasText(category)) {
+            posts = postRepository.findByCategoryOrderByCreatedAtDesc(category);
+        } else if (StringUtils.hasText(tag)) {
+            posts = postRepository.findByTagOrderByCreatedAtDesc(tag);
+        } else {
+            posts = postRepository.findAllByOrderByCreatedAtDesc();
+        }
+        return posts.stream().map(this::toSummary).toList();
     }
 
+    @Transactional(readOnly = true)
     public PostDetailDto getPost(Long id) {
         Post post = postRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Post not found with id: " + id));
         return toDetail(post);
     }
 
+    @Transactional
     public PostDetailDto createPost(CreatePostRequest req, String authorUsername) {
         AppUser author = userRepository.findByUsername(authorUsername)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                        "User not found: " + authorUsername));
 
         Post post = Post.builder()
                 .title(req.getTitle())
                 .body(req.getBody())
-                // Fall back to "general" so the entity's @Builder.Default also kicks in.
-                // Either way, the frontend always receives a non-null string.
                 .category(req.getCategory() != null ? req.getCategory() : "general")
-                .tag(req.getTag())   // tag is allowed to be null
+                .tag(req.getTag())
                 .author(author)
                 .build();
 
@@ -80,7 +94,7 @@ public class PostService {
         return PostSummaryDto.builder()
                 .id(post.getId())
                 .title(post.getTitle())
-                .category(post.getCategory())   // replaces 'style'
+                .category(post.getCategory())
                 .tag(post.getTag())
                 .createdAt(post.getCreatedAt())
                 .authorUsername(post.getAuthor() != null
@@ -95,7 +109,7 @@ public class PostService {
                 .id(post.getId())
                 .title(post.getTitle())
                 .body(post.getBody())
-                .category(post.getCategory())   // replaces 'style'
+                .category(post.getCategory())
                 .tag(post.getTag())
                 .createdAt(post.getCreatedAt())
                 .authorUsername(post.getAuthor() != null

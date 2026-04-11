@@ -1,16 +1,32 @@
 spring:
   application:
     name: CulturaAlSur
+
   datasource:
     url: jdbc:postgresql://localhost:5432/casbackend
     username: admin
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
-      ddl-auto: update
+      # Flyway owns the schema — Hibernate must only validate, never alter it.
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+
+  flyway:
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+
+# JWT settings — override JWT_SECRET in your environment (min 32 chars, Base64).
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: 86400000   # 24 hours
+
+# CORS — set to the Angular dev server origin; override in production.
+cors:
+  allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
