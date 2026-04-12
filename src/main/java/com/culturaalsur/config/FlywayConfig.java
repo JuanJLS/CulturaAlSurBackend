@@ -1,22 +1,8 @@
 package com.culturaalsur.config;
 
-import org.flywaydb.core.Flyway;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import javax.sql.DataSource;
-
-@Configuration
+// Flyway is fully auto-configured by Spring Boot using the
+// spring.flyway.* properties in application.yaml.
+// No manual bean is needed here — the previous manual bean with repair()
+// has been removed to avoid schema drift and double-migration issues.
 public class FlywayConfig {
-
-    @Bean
-    public Flyway flyway(DataSource dataSource) {
-        Flyway flyway = Flyway.configure()
-                .dataSource(dataSource)
-                .locations("classpath:db/migration")
-                .load();
-        flyway.repair();
-        flyway.migrate();
-        return flyway;
-    }
 }

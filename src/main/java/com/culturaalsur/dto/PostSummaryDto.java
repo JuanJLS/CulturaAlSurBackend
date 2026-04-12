@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 // PostSummaryDto.java
 // Used in the list endpoint — only the fields needed for a card thumbnail.
 @Data
@@ -18,7 +16,7 @@ public class PostSummaryDto {
     private String title;
     private String category;         // drives ngClass on the Angular card
     private String tag;
-    private LocalDateTime createdAt;
+    private String createdAt;        // ISO-8601 string, formatted in PostService
     private String authorUsername;
     private String firstImageUrl;
     private int commentCount;

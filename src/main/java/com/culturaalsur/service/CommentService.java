@@ -12,20 +12,24 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-// CommentService.java
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CommentService {
 
+    private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final AppUserRepository userRepository;
 
+    @Transactional
     public CommentDto addComment(Long postId, CreateCommentRequest req, String authorUsername) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -46,6 +50,7 @@ public class CommentService {
         return toDto(commentRepository.save(comment));
     }
 
+    @Transactional(readOnly = true)
     public List<CommentDto> getCommentsByPost(Long postId) {
         if (!postRepository.existsById(postId)) {
             throw new ResponseStatusException(
@@ -61,7 +66,8 @@ public class CommentService {
         return CommentDto.builder()
                 .id(comment.getId())
                 .content(comment.getContent())
-                .createdAt(comment.getCreatedAt())
+                .createdAt(comment.getCreatedAt() != null
+                        ? comment.getCreatedAt().format(ISO) : null)
                 .authorUsername(comment.getAuthor() != null
                         ? comment.getAuthor().getUsername() : "Anonymous")
                 .build();

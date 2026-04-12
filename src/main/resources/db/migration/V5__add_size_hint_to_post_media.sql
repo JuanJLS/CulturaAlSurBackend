@@ -1,0 +1,1 @@
+ALTER TABLE post_media ADD COLUMN IF NOT EXISTS size_hint VARCHAR(10) DEFAULT 'large';

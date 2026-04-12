@@ -33,3 +33,6 @@ build/
 .vscode/
 
 *.env
+
+### Seed migrations — contain credentials, never commit ###
+src/main/resources/db/migration/V4__seed_users.sql

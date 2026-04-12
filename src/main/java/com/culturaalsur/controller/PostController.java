@@ -21,18 +21,42 @@ public class PostController {
     private final PostService postService;
     private final CommentService commentService;
 
-    // Public: anyone can read posts
+    // ── Public read endpoints ──────────────────────────────────────────────────
+
+    /**
+     * GET /api/posts
+     * GET /api/posts?category=music
+     * GET /api/posts?tag=featured
+     *
+     * Returns a paginated-ready list of post summaries. Angular can filter by
+     * passing ?category= or ?tag= as query parameters; only one is applied at a
+     * time (category takes precedence).
+     */
     @GetMapping
-    public ResponseEntity<List<PostSummaryDto>> getAllPosts() {
-        return ResponseEntity.ok(postService.getAllPosts());
+    public ResponseEntity<List<PostSummaryDto>> getAllPosts(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String tag) {
+        return ResponseEntity.ok(postService.getAllPosts(category, tag));
     }
 
+    /** GET /api/posts/{id} — full post with body, media and comments. */
     @GetMapping("/{id}")
     public ResponseEntity<PostDetailDto> getPost(@PathVariable Long id) {
         return ResponseEntity.ok(postService.getPost(id));
     }
 
-    // Users: authenticated users can comment
+    /**
+     * GET /api/posts/{id}/comments — paginated-ready comment list for a post.
+     * Public so Angular can display comments without requiring login.
+     */
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<List<CommentDto>> getComments(@PathVariable Long id) {
+        return ResponseEntity.ok(commentService.getCommentsByPost(id));
+    }
+
+    // ── Authenticated endpoints ────────────────────────────────────────────────
+
+    /** POST /api/posts/{id}/comments — add a comment; requires a valid JWT. */
     @PostMapping("/{id}/comments")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CommentDto> addComment(
@@ -43,7 +67,9 @@ public class PostController {
                 .body(commentService.addComment(id, req, principal.getName()));
     }
 
-    // Admin only: create post
+    // ── Admin-only endpoints ───────────────────────────────────────────────────
+
+    /** POST /api/posts — create a post; requires ROLE_ADMIN. */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PostDetailDto> createPost(

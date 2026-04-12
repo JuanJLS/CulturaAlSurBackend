@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -14,6 +12,6 @@ import java.time.LocalDateTime;
 public class CommentDto {
     private Long id;
     private String content;
-    private LocalDateTime createdAt;
+    private String createdAt;        // ISO-8601 string, formatted in CommentService
     private String authorUsername;
 }

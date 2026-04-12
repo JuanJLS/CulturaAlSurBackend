@@ -30,4 +30,8 @@ public class PostMedia {
     private String mediaType = "IMAGE";
 
     private int position;
+
+    @Column(name = "size_hint", length = 10)
+    @Builder.Default
+    private String sizeHint = "large";
 }

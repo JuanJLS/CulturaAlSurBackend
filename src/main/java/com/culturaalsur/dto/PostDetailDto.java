@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 // PostDetailDto.java
@@ -20,7 +19,7 @@ public class PostDetailDto {
     private String body;
     private String category;
     private String tag;
-    private LocalDateTime createdAt;
+    private String createdAt;        // ISO-8601 string, formatted in PostService
     private String authorUsername;
     private List<PostMediaDto> media;
     private List<CommentDto> comments;
