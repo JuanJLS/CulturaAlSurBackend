@@ -127,6 +127,7 @@ public class PostService {
                 .url(m.getUrl())
                 .mediaType(m.getMediaType())
                 .position(m.getPosition())
+                .sizeHint(m.getSizeHint())
                 .build();
     }
 
