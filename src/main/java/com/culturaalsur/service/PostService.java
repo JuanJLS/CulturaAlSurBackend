@@ -15,12 +15,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class PostService {
+
+    private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private final PostRepository postRepository;
     private final AppUserRepository userRepository;
@@ -96,7 +99,7 @@ public class PostService {
                 .title(post.getTitle())
                 .category(post.getCategory())
                 .tag(post.getTag())
-                .createdAt(post.getCreatedAt())
+                .createdAt(post.getCreatedAt() != null ? post.getCreatedAt().format(ISO) : null)
                 .authorUsername(post.getAuthor() != null
                         ? post.getAuthor().getUsername() : "Anonymous")
                 .firstImageUrl(firstImage)
@@ -111,7 +114,7 @@ public class PostService {
                 .body(post.getBody())
                 .category(post.getCategory())
                 .tag(post.getTag())
-                .createdAt(post.getCreatedAt())
+                .createdAt(post.getCreatedAt() != null ? post.getCreatedAt().format(ISO) : null)
                 .authorUsername(post.getAuthor() != null
                         ? post.getAuthor().getUsername() : "Anonymous")
                 .media(post.getMedia().stream().map(this::toMediaDto).toList())
@@ -124,6 +127,7 @@ public class PostService {
                 .url(m.getUrl())
                 .mediaType(m.getMediaType())
                 .position(m.getPosition())
+                .sizeHint(m.getSizeHint())
                 .build();
     }
 
@@ -131,7 +135,7 @@ public class PostService {
         return CommentDto.builder()
                 .id(c.getId())
                 .content(c.getContent())
-                .createdAt(c.getCreatedAt())
+                .createdAt(String.valueOf(c.getCreatedAt()))
                 .authorUsername(c.getAuthor() != null
                         ? c.getAuthor().getUsername() : "Anonymous")
                 .build();
