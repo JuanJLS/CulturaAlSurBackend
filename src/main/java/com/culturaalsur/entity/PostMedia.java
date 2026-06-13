@@ -22,7 +22,7 @@ public class PostMedia {
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
-    @Column(nullable = false, length = 500)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String url;
 
     @Column(name = "media_type")
@@ -34,4 +34,8 @@ public class PostMedia {
     @Column(name = "size_hint", length = 10)
     @Builder.Default
     private String sizeHint = "large";
+
+    @Column(name = "align", length = 10)
+    @Builder.Default
+    private String align = "none";
 }

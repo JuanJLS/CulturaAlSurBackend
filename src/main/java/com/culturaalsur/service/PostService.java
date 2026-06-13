@@ -74,6 +74,8 @@ public class PostService {
                         .url(m.getUrl())
                         .mediaType(m.getMediaType())
                         .position(m.getPosition())
+                        .sizeHint(m.getSizeHint() != null ? m.getSizeHint() : "large")
+                        .align(m.getAlign() != null ? m.getAlign() : "none")
                         .build();
                 post.getMedia().add(media);
             });
@@ -128,6 +130,7 @@ public class PostService {
                 .mediaType(m.getMediaType())
                 .position(m.getPosition())
                 .sizeHint(m.getSizeHint())
+                .align(m.getAlign())
                 .build();
     }
 
