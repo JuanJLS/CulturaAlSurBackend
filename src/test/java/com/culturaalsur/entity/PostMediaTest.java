@@ -117,4 +117,87 @@ class PostMediaTest {
         PostMedia found = em.find(PostMedia.class, media.getId());
         assertThat(found.getPosition()).isEqualTo(3);
     }
+
+    @Test
+    void captionIsPersisted() {
+        PostMedia media = PostMedia.builder()
+                .post(post)
+                .url("https://example.com/image.jpg")
+                .position(0)
+                .caption("A beautiful sunset")
+                .build();
+
+        em.persist(media);
+        em.flush();
+        em.clear();
+
+        PostMedia found = em.find(PostMedia.class, media.getId());
+        assertThat(found.getCaption()).isEqualTo("A beautiful sunset");
+    }
+
+    @Test
+    void captionDefaultsToNull() {
+        PostMedia media = PostMedia.builder()
+                .post(post)
+                .url("https://example.com/image.jpg")
+                .position(0)
+                .build();
+
+        em.persist(media);
+        em.flush();
+        em.clear();
+
+        PostMedia found = em.find(PostMedia.class, media.getId());
+        assertThat(found.getCaption()).isNull();
+    }
+
+    @Test
+    void alignIsPersisted() {
+        PostMedia media = PostMedia.builder()
+                .post(post)
+                .url("https://example.com/image.jpg")
+                .position(0)
+                .align("center")
+                .build();
+
+        em.persist(media);
+        em.flush();
+        em.clear();
+
+        PostMedia found = em.find(PostMedia.class, media.getId());
+        assertThat(found.getAlign()).isEqualTo("center");
+    }
+
+    @Test
+    void alignDefaultsToNone() {
+        PostMedia media = PostMedia.builder()
+                .post(post)
+                .url("https://example.com/image.jpg")
+                .position(0)
+                .build();
+
+        em.persist(media);
+        em.flush();
+        em.clear();
+
+        PostMedia found = em.find(PostMedia.class, media.getId());
+        assertThat(found.getAlign()).isEqualTo("none");
+    }
+
+    @Test
+    void sizeHintIsPersisted() {
+        PostMedia media = PostMedia.builder()
+                .post(post)
+                .url("https://example.com/image.jpg")
+                .position(0)
+                .sizeHint("small")
+                .build();
+
+        em.persist(media);
+        em.flush();
+        em.clear();
+
+        PostMedia found = em.find(PostMedia.class, media.getId());
+        assertThat(found.getSizeHint()).isEqualTo("small");
+    }
 }

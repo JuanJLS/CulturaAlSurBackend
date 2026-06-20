@@ -1,0 +1,1 @@
+ALTER TABLE post_media ALTER COLUMN url TYPE TEXT;

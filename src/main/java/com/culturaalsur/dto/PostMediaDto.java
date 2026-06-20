@@ -14,4 +14,6 @@ public class PostMediaDto {
     private String mediaType;   // "IMAGE" or "VIDEO"
     private int position;
     private String sizeHint;
+    private String align;
+    private String caption;
 }
