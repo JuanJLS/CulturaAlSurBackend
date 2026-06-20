@@ -74,6 +74,9 @@ public class PostService {
                         .url(m.getUrl())
                         .mediaType(m.getMediaType())
                         .position(m.getPosition())
+                        .sizeHint(m.getSizeHint() != null ? m.getSizeHint() : "large")
+                        .align(m.getAlign())
+                        .caption(m.getCaption())
                         .build();
                 post.getMedia().add(media);
             });
@@ -82,6 +85,38 @@ public class PostService {
         log.info("Creating post '{}' in category '{}' by {}",
                 post.getTitle(), post.getCategory(), authorUsername);
 
+        return toDetail(postRepository.save(post));
+    }
+
+    @Transactional
+    public PostDetailDto updatePost(Long id, CreatePostRequest req) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Post not found with id: " + id));
+
+        post.setTitle(req.getTitle());
+        post.setBody(req.getBody());
+        post.setCategory(req.getCategory() != null ? req.getCategory() : "general");
+        post.setTag(req.getTag());
+
+        post.getMedia().clear();
+
+        if (req.getMedia() != null) {
+            req.getMedia().forEach(m -> {
+                PostMedia media = PostMedia.builder()
+                        .post(post)
+                        .url(m.getUrl())
+                        .mediaType(m.getMediaType())
+                        .position(m.getPosition())
+                        .sizeHint(m.getSizeHint() != null ? m.getSizeHint() : "large")
+                        .align(m.getAlign())
+                        .caption(m.getCaption())
+                        .build();
+                post.getMedia().add(media);
+            });
+        }
+
+        log.info("Updating post '{}' (id={})", post.getTitle(), id);
         return toDetail(postRepository.save(post));
     }
 
@@ -128,6 +163,8 @@ public class PostService {
                 .mediaType(m.getMediaType())
                 .position(m.getPosition())
                 .sizeHint(m.getSizeHint())
+                .align(m.getAlign())
+                .caption(m.getCaption())
                 .build();
     }
 

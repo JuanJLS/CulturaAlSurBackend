@@ -78,4 +78,13 @@ public class PostController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(postService.createPost(req, principal.getName()));
     }
+
+    /** PUT /api/posts/{id} — edit a post; requires ROLE_ADMIN. */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PostDetailDto> updatePost(
+            @PathVariable Long id,
+            @RequestBody @Valid CreatePostRequest req) {
+        return ResponseEntity.ok(postService.updatePost(id, req));
+    }
 }

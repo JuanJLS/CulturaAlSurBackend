@@ -31,6 +31,7 @@ spring:
     # V2 was edited after it was first applied (typo fix).
     # Checksum validation is off; V3 handles the column rename at the DB level.
     validate-on-migrate: false
+    out-of-order: true
 
 # JWT settings — injected from variables.env (JWT_SECRET).
 jwt:
