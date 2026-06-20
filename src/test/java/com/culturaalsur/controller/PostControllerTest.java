@@ -241,4 +241,76 @@ class PostControllerTest {
                         .content(body))
                 .andExpect(status().isBadRequest());
     }
+
+    // ── PUT /api/posts/{id} ──────────────────────────────────────────────────────
+
+    @Test
+    void updatePost_notAuthenticated_returns4xx() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                new CreatePostRequest("Updated", "Body", "music", null, null));
+
+        mockMvc.perform(put("/api/posts/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @WithMockUser(username = "juanjls", roles = "USER")
+    void updatePost_notAdmin_returns403() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                new CreatePostRequest("Updated", "Body", "music", null, null));
+
+        mockMvc.perform(put("/api/posts/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void updatePost_asAdmin_returns200() throws Exception {
+        PostDetailDto updated = PostDetailDto.builder()
+                .id(1L).title("Updated Title").body("Updated body").category("music")
+                .tag("featured").createdAt("2024-01-15T10:00:00").authorUsername("admin")
+                .media(List.of()).comments(List.of()).build();
+        when(postService.updatePost(eq(1L), any(CreatePostRequest.class))).thenReturn(updated);
+
+        String body = objectMapper.writeValueAsString(
+                new CreatePostRequest("Updated Title", "Updated body", "music", "featured", null));
+
+        mockMvc.perform(put("/api/posts/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Updated Title"))
+                .andExpect(jsonPath("$.body").value("Updated body"));
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void updatePost_blankTitle_returns400() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                new CreatePostRequest("", "Body", "music", null, null));
+
+        mockMvc.perform(put("/api/posts/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void updatePost_nonExistingId_returns404() throws Exception {
+        when(postService.updatePost(eq(99L), any(CreatePostRequest.class)))
+                .thenThrow(new ResponseStatusException(NOT_FOUND, "Post not found"));
+
+        String body = objectMapper.writeValueAsString(
+                new CreatePostRequest("Title", "Body", "music", null, null));
+
+        mockMvc.perform(put("/api/posts/99")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isNotFound());
+    }
 }

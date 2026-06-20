@@ -292,4 +292,146 @@ class PostServiceTest {
         assertThat(dto.getMedia()).hasSize(1);
         assertThat(dto.getMedia().getFirst().getSizeHint()).isEqualTo("medium");
     }
+
+    @Test
+    void createPost_withMediaCaptionAndAlign_includedInSavedPost() {
+        AppUser author = author();
+        when(userRepository.findByUsername("juanjls")).thenReturn(Optional.of(author));
+
+        PostMediaDto mediaItem = PostMediaDto.builder()
+                .url("https://example.com/img.jpg")
+                .mediaType("IMAGE").position(0).sizeHint("small")
+                .align("center").caption("A nice photo").build();
+        CreatePostRequest req =
+                new CreatePostRequest("Title", "Body", "general", null, List.of(mediaItem));
+
+        Post saved = Post.builder()
+                .title("Title").body("Body").category("general").author(author).build();
+        PostMedia pm = PostMedia.builder()
+                .post(saved).url("https://example.com/img.jpg")
+                .mediaType("IMAGE").position(0).sizeHint("small")
+                .align("center").caption("A nice photo").build();
+        saved.getMedia().add(pm);
+        when(postRepository.save(any(Post.class))).thenReturn(saved);
+
+        PostDetailDto dto = postService.createPost(req, "juanjls");
+
+        assertThat(dto.getMedia()).hasSize(1);
+        assertThat(dto.getMedia().getFirst().getAlign()).isEqualTo("center");
+        assertThat(dto.getMedia().getFirst().getCaption()).isEqualTo("A nice photo");
+        assertThat(dto.getMedia().getFirst().getSizeHint()).isEqualTo("small");
+    }
+
+    // ── updatePost ────────────────────────────────────────────────────────────────
+
+    @Test
+    void updatePost_existingPost_updatesFieldsAndReturnsDetail() {
+        AppUser author = author();
+        Post existing = Post.builder()
+                .title("Old Title").body("Old body").category("general")
+                .tag("old").author(author).build();
+        when(postRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        CreatePostRequest req =
+                new CreatePostRequest("New Title", "New body", "music", "new-tag", null);
+
+        when(postRepository.save(any(Post.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PostDetailDto dto = postService.updatePost(1L, req);
+
+        assertThat(dto.getTitle()).isEqualTo("New Title");
+        assertThat(dto.getBody()).isEqualTo("New body");
+        assertThat(dto.getCategory()).isEqualTo("music");
+        assertThat(dto.getTag()).isEqualTo("new-tag");
+    }
+
+    @Test
+    void updatePost_nonExistingId_throwsNotFound() {
+        when(postRepository.findById(99L)).thenReturn(Optional.empty());
+
+        CreatePostRequest req = new CreatePostRequest("Title", "Body", null, null, null);
+
+        assertThatThrownBy(() -> postService.updatePost(99L, req))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Post not found");
+    }
+
+    @Test
+    void updatePost_nullCategory_defaultsToGeneral() {
+        AppUser author = author();
+        Post existing = Post.builder()
+                .title("Title").body("Body").category("music").author(author).build();
+        when(postRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        CreatePostRequest req = new CreatePostRequest("Title", "Body", null, null, null);
+        when(postRepository.save(any(Post.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        assertThat(postService.updatePost(1L, req).getCategory()).isEqualTo("general");
+    }
+
+    @Test
+    void updatePost_replacesMedia() {
+        AppUser author = author();
+        Post existing = Post.builder()
+                .title("Title").body("Body").category("general").author(author).build();
+        PostMedia oldMedia = PostMedia.builder()
+                .post(existing).url("https://example.com/old.jpg")
+                .mediaType("IMAGE").position(0).sizeHint("large").build();
+        existing.getMedia().add(oldMedia);
+        when(postRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        PostMediaDto newMediaDto = PostMediaDto.builder()
+                .url("https://example.com/new.jpg")
+                .mediaType("IMAGE").position(0).sizeHint("small")
+                .align("left").caption("Updated caption").build();
+        CreatePostRequest req =
+                new CreatePostRequest("Title", "Body", "general", null, List.of(newMediaDto));
+
+        when(postRepository.save(any(Post.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PostDetailDto dto = postService.updatePost(1L, req);
+
+        assertThat(dto.getMedia()).hasSize(1);
+        assertThat(dto.getMedia().getFirst().getUrl()).isEqualTo("https://example.com/new.jpg");
+        assertThat(dto.getMedia().getFirst().getSizeHint()).isEqualTo("small");
+        assertThat(dto.getMedia().getFirst().getAlign()).isEqualTo("left");
+        assertThat(dto.getMedia().getFirst().getCaption()).isEqualTo("Updated caption");
+    }
+
+    @Test
+    void updatePost_withNullMedia_clearsExistingMedia() {
+        AppUser author = author();
+        Post existing = Post.builder()
+                .title("Title").body("Body").category("general").author(author).build();
+        existing.getMedia().add(PostMedia.builder()
+                .post(existing).url("https://example.com/img.jpg")
+                .mediaType("IMAGE").position(0).build());
+        when(postRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        CreatePostRequest req = new CreatePostRequest("Title", "Body", "general", null, null);
+        when(postRepository.save(any(Post.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PostDetailDto dto = postService.updatePost(1L, req);
+
+        assertThat(dto.getMedia()).isEmpty();
+    }
+
+    @Test
+    void updatePost_preservesSizeHintDefault() {
+        AppUser author = author();
+        Post existing = Post.builder()
+                .title("Title").body("Body").category("general").author(author).build();
+        when(postRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        PostMediaDto mediaDto = PostMediaDto.builder()
+                .url("https://example.com/img.jpg")
+                .mediaType("IMAGE").position(0).sizeHint(null).build();
+        CreatePostRequest req =
+                new CreatePostRequest("Title", "Body", "general", null, List.of(mediaDto));
+        when(postRepository.save(any(Post.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PostDetailDto dto = postService.updatePost(1L, req);
+
+        assertThat(dto.getMedia().getFirst().getSizeHint()).isEqualTo("large");
+    }
 }
